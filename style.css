@@ -6,25 +6,21 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+  background: #f9fafb;
   color: #1f2937;
   min-height: 100vh;
-  padding: 20px 16px;
+  padding: 24px 16px;
 }
 
 header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 h1 {
   font-size: 1.8rem;
   font-weight: 600;
-  background: linear-gradient(to right, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.5px;
+  color: #1e40af; /* ฟ้าเข้มเรียบ ๆ */
 }
 
 #groups-container {
@@ -39,13 +35,13 @@ h1 {
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  transition: all 0.2s ease;
 }
 
 .group:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
 h3 {
@@ -53,43 +49,35 @@ h3 {
   font-size: 1.15rem;
   font-weight: 600;
   text-align: center;
+  background: #1e40af; /* ฟ้าเข้มเดียวกัน */
   color: white;
 }
-
-/* สี header กลุ่มต่าง ๆ (ปรับได้ตามชอบ) */
-.group:nth-child(1) h3 { background: #3b82f6; } /* A884 - ฟ้า */
-.group:nth-child(2) h3 { background: #8b5cf6; } /* A883,WC22 - ม่วง */
-.group:nth-child(3) h3 { background: #ec4899; } /* A88,... - ชมพู */
-.group:nth-child(4) h3 { background: #10b981; } /* THNA - เขียว */
-.group:nth-child(5) h3 { background: #059669; } /* THNB - เขียวเข้ม */
-.group:nth-child(6) h3 { background: #f59e0b; } /* THCA - ส้ม */
-.group:nth-child(7) h3 { background: #d946ef; } /* THVA - ม่วงชมพู */
-.group:nth-child(8) h3 { background: #6366f1; } /* AO - น้ำเงินม่วง */
 
 .grid {
   padding: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
 }
 
 button.copy-btn {
-  background: #1d4ed8;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
   color: white;
   border: none;
-  padding: 12px 8px;
-  border-radius: 8px;
+  padding: 12px 10px;
+  border-radius: 16px; /* โค้งมนมากขึ้น */
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 8px rgba(30,64,175,0.2);
+  text-align: center;
 }
 
 button.copy-btn:hover {
-  background: #1e40af;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(29,78,216,0.3);
+  box-shadow: 0 8px 16px rgba(30,64,175,0.3);
 }
 
 .empty {
@@ -109,9 +97,12 @@ button.copy-btn:hover {
 
 .error { color: #ef4444; }
 
-/* Toast */
-div[style*="position: fixed; bottom: 20px; right: 20px;"] {
+/* Toast - เรียบง่าย สีเขียวอ่อน */
+div[style*="position: fixed; bottom"] {
   background: #10b981 !important;
   border: 1px solid #059669;
-  box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+  box-shadow: 0 4px 12px rgba(16,185,129,0.25);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 500;
 }
