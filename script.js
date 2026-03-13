@@ -1,7 +1,7 @@
-// script.js - เชื่อม Google Sheets ผ่าน Apps Script (private)
+// script.js - เชื่อม Google Sheets ผ่าน Apps Script ด้วย JSONP (แก้ CORS)
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJj97YN4silaFXe5I0FwuKPSOZGwu41erD_86u5P3PgosuyvTxr2aY9lTr5X-5Ek05-g/exec';  // วาง Web app URL ที่ได้จากขั้นตอน 1 ที่นี่
-const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';  // ต้องตรงกับใน Apps Script เป๊ะ ๆ
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby8km6WQeFI2Y6mmv5R0O8gYHeO_3nNmU9y2bMwOJwXU-mrjodi1Ydf2wSjvH9zx252-g/exec'; // วาง URL จริงของคุณที่นี่
+const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy'; // ต้องตรงกับใน Apps Script เป๊ะ ๆ
 
 // กำหนด 8 กลุ่ม
 const paymentGroups = [
@@ -15,39 +15,40 @@ const paymentGroups = [
   { name: "AO",                    key: "AO"   },
 ];
 
-async function fetchAccounts() {
-  try {
-    const url = `${APPS_SCRIPT_URL}?secret=${encodeURIComponent(SECRET_KEY)}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',          // ลอง cors ก่อน ถ้าไม่ได้ค่อยเปลี่ยนเป็น no-cors
-      redirect: 'follow',
-      cache: 'no-cache'
-    });
+function fetchAccounts() {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'handleSheetData_' + Math.random().toString(36).substr(2, 9); // ชื่อ callback แบบ random ป้องกัน collision
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const script = document.createElement('script');
+    script.src = `${APPS_SCRIPT_URL}?secret=${encodeURIComponent(SECRET_KEY)}&callback=${callbackName}`;
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('JSONP script load failed'));
+    };
+
+    window[callbackName] = function(data) {
+      cleanup();
+      if (!data || data.error) {
+        reject(new Error(data ? data.error : 'No data received'));
+        return;
+      }
+
+      // Process data
+      const processed = data.map(acc => ({
+        ...acc,
+        short: acc.short || `${acc.bank}-${acc.no.slice(-5)}`
+      }));
+
+      resolve(processed);
+    };
+
+    function cleanup() {
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
     }
 
-    // ถ้าใช้ mode: 'no-cors' response จะ opaque → ไม่เห็น body ได้จริง แต่ทดสอบว่า request ผ่านไหม
-    // ถ้า no-cors แล้วไม่มี error แต่ data ว่าง → แสดงว่า request ถึงแต่ CORS บล็อก body
-    const accounts = await response.json();  // ถ้า no-cors จะ error ที่บรรทัดนี้
-
-    if (accounts.error) {
-      throw new Error(accounts.error);
-    }
-
-    return accounts.map(acc => ({
-      ...acc,
-      short: acc.short || `${acc.bank}-${acc.no.slice(-5)}`
-    }));
-
-  } catch (error) {
-    console.error('Fetch error details:', error);
-    alert('ไม่สามารถดึงข้อมูลได้ กรุณาตรวจสอบ:\n1. Web app URL ถูกต้องไหม?\n2. Secret key ตรงกันทั้ง Apps Script และ JS ไหม?\n3. Deploy เป็น "Anyone" และ Execute as "Me"?\n4. เปิด Console (F12) ดู error เต็ม ๆ แล้วบอกผม');
-    return [];
-  }
+    document.body.appendChild(script);
+  });
 }
 
 function renderGroups(accounts) {
@@ -120,6 +121,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const container = document.getElementById("groups-container");
   container.innerHTML = '<p style="text-align:center; color:#666;">กำลังโหลดข้อมูลจาก Google Sheets...</p>';
 
-  const accounts = await fetchAccounts();
-  renderGroups(accounts);
+  try {
+    const accounts = await fetchAccounts();
+    renderGroups(accounts);
+  } catch (err) {
+    console.error('Error:', err);
+    container.innerHTML = '<p style="text-align:center; color:red;">ไม่สามารถดึงข้อมูลได้ กรุณาตรวจสอบ Console (F12) แล้วแจ้ง error: ' + err.message + '</p>';
+  }
 });
