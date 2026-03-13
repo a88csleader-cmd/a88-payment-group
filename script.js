@@ -201,6 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
     });
 
-  // Smart update check ทุก 5 วินาที
-  setInterval(checkUpdate, 5000);
+  // Smart update check ทุก 30 วินาที
+  setInterval(checkUpdate, 30000);
 });
