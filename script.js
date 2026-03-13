@@ -1,6 +1,6 @@
 // script.js - JSONP สำหรับ GAS (แก้ CORS)
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytRRQh5awFzA90wvfTnL3pI0Z9JvQ3lYQ9ftLAyF2cd_0djmFScZADZaaGWRd0mNHW3g/exec'; // วาง URL Web app จริงของคุณ
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcQxrPddfc0BQ7JUxPx3QthTLbxfYhFv6iFQ0LwrgQiwolWj17c4vgt0Ag99w0KH3x6w/exec'; // วาง URL Web app จริงของคุณ
 const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy'; // ต้องตรงกับ GAS เป๊ะ (case-sensitive)
 
 const paymentGroups = [
