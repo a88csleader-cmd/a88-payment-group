@@ -17,18 +17,20 @@ const paymentGroups = [
 function loadDataFromGAS() {
   return new Promise((resolve, reject) => {
     const callbackName = 'gasCallback_' + Date.now();
+    console.log('Attempting JSONP load with callback:', callbackName);
+    console.log('Full URL:', APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName);
 
     const scriptTag = document.createElement('script');
     scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
     scriptTag.async = true;
 
     window[callbackName] = function(response) {
-      // ลบ script tag และ callback function หลังใช้งาน
+      console.log('JSONP callback received:', response);
       document.body.removeChild(scriptTag);
       delete window[callbackName];
 
       if (!response || response.length === 0) {
-        reject(new Error('No accounts data received'));
+        reject(new Error('No accounts data received from GAS'));
         return;
       }
 
@@ -40,10 +42,15 @@ function loadDataFromGAS() {
       resolve(processed);
     };
 
-    scriptTag.onerror = function() {
+    scriptTag.onload = function() {
+      console.log('Script tag loaded successfully (but callback may not fire if invalid JS)');
+    };
+
+    scriptTag.onerror = function(err) {
+      console.error('Script tag onerror details:', err);
       document.body.removeChild(scriptTag);
       delete window[callbackName];
-      reject(new Error('Failed to load GAS script (check URL, secret, or network)'));
+      reject(new Error('Failed to load GAS script - check Network tab for status code / response'));
     };
 
     document.body.appendChild(scriptTag);
