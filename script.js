@@ -8,12 +8,12 @@ let lastAccountsJSON = null;
 
 // ธนาคาร + สี + ตัวอักษรย่อ
 const bankColors = {
-  "SCB": { color: "#1e40af", initial: "S" },
-  "KBANK": { color: "#16a34a", initial: "K" },
-  "BBL": { color: "#f59e0b", initial: "B" },
-  "KTB": { color: "#2563eb", initial: "T" },
-  "TMB": { color: "#7c3aed", initial: "M" },
-  "default": { color: "#1e40af", initial: "?" }
+  "SCB": "#1e40af",
+  "KBANK": "#16a34a",
+  "BBL": "#f59e0b",
+  "KTB": "#2563eb",
+  "TMB": "#7c3aed",
+  "default": "#1e40af"
 };
 
 // กลุ่มบัญชี
@@ -118,15 +118,16 @@ function renderGroups(accounts) {
         const btn = document.createElement('button');
         btn.className = 'copy-btn';
 
-        const bankInfo = bankColors[acc.bank] || bankColors.default;
+const bankColor = bankColors[acc.bank] || bankColors.default;
+const bankInitials = acc.bank.slice(0,2).toLowerCase();
 
-        btn.innerHTML = `
-          <div class="btn-left">
-            <span class="bank-circle" style="background:${bankInfo.color}">${bankInfo.initial}</span>
-            <span>${acc.short}</span>
-          </div>
-          <span class="copy-arrow">📋</span>
-        `;
+btn.innerHTML = `
+  <div class="btn-left">
+    <span class="bank-circle" style="background:${bankColor}">${bankInitials}</span>
+    <span>${acc.short}</span>
+  </div>
+  <span class="copy-arrow">📋</span>
+`;
 
         btn.onclick = () => {
           const accNo = formatAccountNumber(acc.no);
