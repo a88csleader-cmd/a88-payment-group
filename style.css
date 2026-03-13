@@ -27,7 +27,7 @@ h1 {
 #groups-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 24px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -57,7 +57,7 @@ h3 {
 .grid {
   padding: 16px;
   display: grid;
-  grid-template-columns: 1fr; /* ปุ่มเต็มแถว */
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -85,6 +85,19 @@ button.copy-btn:hover {
 .btn-left {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.bank-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .copy-arrow {
@@ -98,14 +111,32 @@ button.copy-btn:hover {
   padding: 16px;
 }
 
-.loading, .error {
+.loading {
   text-align: center;
   padding: 60px 20px;
   font-size: 1.2rem;
   color: #6b7280;
+  position: relative;
 }
+.loading::after {
+  content: "";
+  display: inline-block;
+  margin-left: 8px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #3b82f6;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.error { color: #ef4444; }
+.error {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.2rem;
+  color: #ef4444;
+}
 
 /* Toast */
 .toast {
