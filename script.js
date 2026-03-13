@@ -18,28 +18,34 @@ const paymentGroups = [
 async function fetchAccounts() {
   try {
     const url = `${APPS_SCRIPT_URL}?secret=${encodeURIComponent(SECRET_KEY)}`;
-    const response = await fetch(url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',          // ลอง cors ก่อน ถ้าไม่ได้ค่อยเปลี่ยนเป็น no-cors
+      redirect: 'follow',
+      cache: 'no-cache'
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const accounts = await response.json();
+    // ถ้าใช้ mode: 'no-cors' response จะ opaque → ไม่เห็น body ได้จริง แต่ทดสอบว่า request ผ่านไหม
+    // ถ้า no-cors แล้วไม่มี error แต่ data ว่าง → แสดงว่า request ถึงแต่ CORS บล็อก body
+    const accounts = await response.json();  // ถ้า no-cors จะ error ที่บรรทัดนี้
 
-    // ถ้า Apps Script ส่ง error กลับมา
     if (accounts.error) {
       throw new Error(accounts.error);
     }
 
-    // fallback short ถ้าว่าง
     return accounts.map(acc => ({
       ...acc,
       short: acc.short || `${acc.bank}-${acc.no.slice(-5)}`
     }));
 
   } catch (error) {
-    console.error('Error fetching data:', error);
-    alert('ไม่สามารถดึงข้อมูลได้ กรุณาตรวจสอบ:\n- Web app URL\n- Secret key\n- Sheet ชื่อ Sheet1 และ header');
+    console.error('Fetch error details:', error);
+    alert('ไม่สามารถดึงข้อมูลได้ กรุณาตรวจสอบ:\n1. Web app URL ถูกต้องไหม?\n2. Secret key ตรงกันทั้ง Apps Script และ JS ไหม?\n3. Deploy เป็น "Anyone" และ Execute as "Me"?\n4. เปิด Console (F12) ดู error เต็ม ๆ แล้วบอกผม');
     return [];
   }
 }
