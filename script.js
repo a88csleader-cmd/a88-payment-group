@@ -1,56 +1,49 @@
-// script.js - JSONP สำหรับ GAS (แก้ CORS)
+// script.js - เวอร์ชันสมบูรณ์สำหรับหน้าเว็บ Payment Groups (เชื่อม Google Sheets ผ่าน Apps Script ด้วย JSONP)
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJBoFs4CXGVe5WIF0-Gyqv7LFlU2caVPKreZVh3XslMYzu2rG8frEXN_0uqgOUC1NLUA/exec'; // วาง URL Web app จริงของคุณ
-const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy'; // ต้องตรงกับ GAS เป๊ะ (case-sensitive)
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJBoFs4CXGVe5WIF0-Gyqv7LFlU2caVPKreZVh3XslMYzu2rG8frEXN_0uqgOUC1NLUA/exec'; // URL ของคุณ
+const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy'; // เปลี่ยนถ้าคุณเปลี่ยน secret
 
+// กำหนด 8 กลุ่ม ให้ตรงกับชื่อที่ Sheet ส่งมาเป๊ะ ๆ
 const paymentGroups = [
-  { name: "A884", key: "A884" },
-  { name: "A883, WC22", keys: ["A883", "WC22"] },
-  { name: "A88, 0, 1, 2, AF, AFF", keys: ["A88", "0", "1", "2", "AF", "AFF"] },
-  { name: "THNA", key: "THNA" },
-  { name: "THNB", key: "THNB" },
-  { name: "THCA", key: "THCA" },
-  { name: "THVA", key: "THVA" },
-  { name: "AO", key: "AO" }
+  { name: "A884",                  key: "A884" },
+  { name: "A883,WC22",             key: "A883,WC22" },
+  { name: "A88,0,1,2,AF,AFF",     key: "A88,0,1,2,AF,AFF" },
+  { name: "THNA",                  key: "THNA" },
+  { name: "THNB",                  key: "THNB" },
+  { name: "THCA",                  key: "THCA" },
+  { name: "THVA",                  key: "THVA" },
+  { name: "AO",                    key: "AO"   }
 ];
 
 function loadDataFromGAS() {
   return new Promise((resolve, reject) => {
     const callbackName = 'gasCallback_' + Date.now();
-    console.log('Attempting JSONP load with callback:', callbackName);
-    console.log('Full URL:', APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName);
 
     const scriptTag = document.createElement('script');
     scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
     scriptTag.async = true;
 
     window[callbackName] = function(response) {
-      console.log('JSONP callback received:', response);
       document.body.removeChild(scriptTag);
       delete window[callbackName];
 
       if (!response || response.length === 0) {
-        reject(new Error('No accounts data received from GAS'));
+        reject(new Error('ไม่มีข้อมูลบัญชีจาก Google Sheets'));
         return;
       }
 
       const processed = response.map(acc => ({
         ...acc,
-        short: acc.short.trim() || `${acc.bank}-${acc.no.slice(-5)}`
+        short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
       }));
 
       resolve(processed);
     };
 
-    scriptTag.onload = function() {
-      console.log('Script tag loaded successfully (but callback may not fire if invalid JS)');
-    };
-
-    scriptTag.onerror = function(err) {
-      console.error('Script tag onerror details:', err);
+    scriptTag.onerror = function() {
       document.body.removeChild(scriptTag);
       delete window[callbackName];
-      reject(new Error('Failed to load GAS script - check Network tab for status code / response'));
+      reject(new Error('ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้ (ตรวจ URL หรือ secret)'));
     };
 
     document.body.appendChild(scriptTag);
@@ -59,52 +52,56 @@ function loadDataFromGAS() {
 
 function renderGroups(accounts) {
   const container = document.getElementById('groups-container');
+  if (!container) return;
+
   container.innerHTML = '';
 
   paymentGroups.forEach(group => {
-    const matches = accounts.filter(acc => {
-      if (group.key) return acc.groups.includes(group.key);
-      return group.keys && group.keys.some(k => acc.groups.includes(k));
-    });
+    // ใช้ key เดียว match กับชื่อกลุ่มที่ Sheet ส่งมา
+    const matchingAccounts = accounts.filter(acc => acc.groups.includes(group.key));
 
     const section = document.createElement('section');
     section.className = 'group-section';
 
-    const h2 = document.createElement('h2');
-    h2.className = 'group-header';
-    h2.textContent = `กลุ่ม ${group.name}`;
-    section.appendChild(h2);
+    const header = document.createElement('h2');
+    header.className = 'group-header';
+    header.textContent = `กลุ่ม ${group.name}`;
+    section.appendChild(header);
 
     const grid = document.createElement('div');
     grid.className = 'accounts-grid';
 
-    if (matches.length === 0) {
+    if (matchingAccounts.length === 0) {
       const p = document.createElement('p');
       p.textContent = 'ไม่มีบัญชีในกลุ่มนี้';
       p.style.textAlign = 'center';
       p.style.color = '#888';
       grid.appendChild(p);
     } else {
-      matches.forEach(acc => {
+      matchingAccounts.forEach(acc => {
         const btn = document.createElement('button');
         btn.className = 'copy-btn';
         btn.textContent = acc.short;
         btn.title = `${acc.name} - ${acc.no} (${acc.bank})`;
 
-        btn.onclick = () => {
-          const info = `${acc.name} - ${acc.no} (${acc.bank})`;
-          const warning = `
+        btn.addEventListener('click', () => {
+          const accountInfo = `${acc.name} - ${acc.no} (${acc.bank})`;
+
+          const warningText = `
 ──────────────────────────────
 ⚠ หมายเหตุการฝาก-ถอน
 ──────────────────────────────
 ⚠ ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น
 💸 ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท
-🎰 กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ`.trim();
+🎰 กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ
+          `.trim();
 
-          navigator.clipboard.writeText(`${info}\n${warning}`)
-            .then(() => alert(`คัดลอกแล้ว!\n\n${info}\n${warning}`))
-            .catch(err => alert('คัดลอกไม่ได้: ' + err));
-        };
+          const fullText = `${accountInfo}\n${warningText}`;
+
+          navigator.clipboard.writeText(fullText)
+            .then(() => alert(`คัดลอกเรียบร้อย!\n\n${fullText}`))
+            .catch(err => alert('คัดลอกไม่สำเร็จ: ' + err));
+        });
 
         grid.appendChild(btn);
       });
@@ -115,14 +112,17 @@ function renderGroups(accounts) {
   });
 }
 
+// โหลดข้อมูลเมื่อหน้าเปิด
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('groups-container');
-  container.innerHTML = '<p style="text-align:center; color:#666;">กำลังโหลดข้อมูล...</p>';
+  container.innerHTML = '<p style="text-align:center; color:#666;">กำลังโหลดข้อมูลจาก Google Sheets...</p>';
 
   loadDataFromGAS()
-    .then(accounts => renderGroups(accounts))
+    .then(accounts => {
+      renderGroups(accounts);
+    })
     .catch(err => {
-      console.error('GAS load error:', err);
-      container.innerHTML = `<p style="text-align:center; color:red;">โหลดข้อมูลไม่ได้: ${err.message}<br>ตรวจ Console (F12) แล้วแจ้งเพิ่ม</p>`;
+      console.error('Error:', err);
+      container.innerHTML = `<p style="text-align:center; color:red;">เกิดข้อผิดพลาด: ${err.message}<br>กรุณาตรวจสอบ Console (F12)</p>`;
     });
 });
