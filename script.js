@@ -1,6 +1,6 @@
 // script.js - เวอร์ชันสมบูรณ์สำหรับหน้าเว็บ Payment Groups (เชื่อม Google Sheets ผ่าน Apps Script ด้วย JSONP)
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWZ5MHz4b7X_XMtxwFqSAe8pS8AFPRpVxglRMqIn199JNWLtaTxAt_erQcKMdMTNZ_/exec'; // URL ของคุณ
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0WHm0EXZDhE0qh9UGlqcmKgrs6FV4qtBFTduG9BlL-sSxRQGHCsfg9jWaOLJDGE_J1g/exec'; // URL ของคุณ
 const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy'; // เปลี่ยนถ้าคุณเปลี่ยน secret
 
 // กำหนด 8 กลุ่ม ให้ตรงกับชื่อที่ Sheet ส่งมาเป๊ะ ๆ
