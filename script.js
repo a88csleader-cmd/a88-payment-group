@@ -14,14 +14,14 @@ const accounts = [
 
 // กำหนด 8 กลุ่ม (ตามที่คุณบอก)
 const paymentGroups = [
-  { name: "A884", key: "A884" },
-  { name: "A883, WC22", keys: ["A883", "WC22"] },
+  { name: "A884",          key: "A884" },
+  { name: "A883, WC22",    keys: ["A883", "WC22"] },
   { name: "A88, 0, 1, 2, AF, AFF", keys: ["A88", "0", "1", "2", "AF", "AFF"] },
-  { name: "THNA", key: "THNA" },
-  { name: "THNB", key: "THNB" },
-  { name: "THCA", key: "THCA" },
-  { name: "THVA", key: "THVA" },
-  { name: "AO", key: "AO" },
+  { name: "THNA",          key: "THNA" },
+  { name: "THNB",          key: "THNB" },
+  { name: "THCA",          key: "THCA" },
+  { name: "THVA",          key: "THVA" },
+  { name: "AO",            key: "AO"   },
 ];
 
 function renderGroups() {
@@ -61,27 +61,31 @@ function renderGroups() {
         const btn = document.createElement("button");
         btn.className = "copy-btn";
         btn.textContent = acc.short;
-        btn.title = `${acc.name} - ${acc.no}`;
+        btn.title = `${acc.name} - ${acc.no} (${acc.bank})`;
         
-btn.addEventListener("click", () => {
-  const accountInfo = `${acc.name} - ${acc.no}`;
-  const warningText = `
-⚠ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น
-💸ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท
-🎰กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ
-  `.trim();
+        btn.addEventListener("click", () => {
+          const accountInfo = `${acc.name} - ${acc.no} (${acc.bank})`;
 
-  const fullText = `${accountInfo}\n${warningText}`;
+          const warningText = `
+──────────────────────────────
+⚠ หมายเหตุการฝาก-ถอน
+──────────────────────────────
+⚠ ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น
+💸 ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท
+🎰 กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ
+          `.trim();
 
-  navigator.clipboard.writeText(fullText)
-    .then(() => {
-      alert(`คัดลอกเรียบร้อยแล้ว!\n\n${fullText}`);
-    })
-    .catch(err => {
-      console.error("Clipboard error:", err);
-      alert("คัดลอกไม่สำเร็จ กรุณาลองใหม่หรือคัดลอกด้วยมือ");
-    });
-});
+          const fullText = `${accountInfo}\n${warningText}`;
+
+          navigator.clipboard.writeText(fullText)
+            .then(() => {
+              alert(`คัดลอกเรียบร้อยแล้ว!\n\n${fullText}`);
+            })
+            .catch(err => {
+              console.error("Clipboard error:", err);
+              alert("คัดลอกไม่สำเร็จ กรุณาลองใหม่หรือคัดลอกด้วยมือ");
+            });
+        });
 
         grid.appendChild(btn);
       });
