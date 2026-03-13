@@ -49,26 +49,38 @@ function loadDataFromGAS() {
   });
 }
 
+// ปรับ showToast ให้สวยและไม่รบกวน
 function showToast(message) {
   const toast = document.createElement('div');
   toast.textContent = message;
   toast.style.position = 'fixed';
-  toast.style.bottom = '20px';
-  toast.style.right = '20px';
-  toast.style.background = 'rgba(0,0,0,0.8)';
+  toast.style.bottom = '24px';
+  toast.style.right = '24px';
+  toast.style.background = 'rgba(16, 185, 129, 0.95)'; // เขียว success
   toast.style.color = 'white';
-  toast.style.padding = '12px 20px';
-  toast.style.borderRadius = '8px';
-  toast.style.zIndex = '1000';
-  toast.style.fontSize = '14px';
+  toast.style.padding = '12px 24px';
+  toast.style.borderRadius = '12px';
+  toast.style.zIndex = '2000';
+  toast.style.fontSize = '15px';
+  toast.style.fontWeight = '500';
+  toast.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
   toast.style.opacity = '0';
-  toast.style.transition = 'opacity 0.4s';
+  toast.style.transform = 'translateY(20px)';
+  toast.style.transition = 'all 0.3s ease';
 
   document.body.appendChild(toast);
 
-  setTimeout(() => { toast.style.opacity = '1'; }, 100);
-  setTimeout(() => { toast.style.opacity = '0'; }, 2500);
-  setTimeout(() => { document.body.removeChild(toast); }, 3000);
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  }, 100);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+  }, 2200);
+
+  setTimeout(() => document.body.removeChild(toast), 2800);
 }
 
 function renderGroups(accounts) {
