@@ -6,103 +6,229 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: #f9fafb;
-  color: #1f2937;
   min-height: 100vh;
-  padding: 24px 16px;
+
+  background:
+    radial-gradient(circle at 10% 10%, #e0e7ff 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, #dbeafe 0%, transparent 40%),
+    #f8fafc;
+
+  color: #1f2937;
+  padding: 28px 18px;
 }
+
+/* Header */
 
 header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 h1 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 600;
-  color: #1e40af; /* ฟ้าเข้มเรียบ ๆ */
+
+  background: linear-gradient(135deg,#1e3a8a,#2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
+
+/* Container */
 
 #groups-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+
   max-width: 1400px;
-  margin: 0 auto;
+  margin: auto;
 }
 
+/* Card */
+
 .group {
-  background: white;
-  border-radius: 12px;
+  background: rgba(255,255,255,0.85);
+
+  backdrop-filter: blur(8px);
+
+  border-radius: 16px;
+
+  border: 1px solid rgba(255,255,255,0.5);
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.08),
+    0 2px 4px rgba(0,0,0,0.04);
+
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  transition: all 0.2s ease;
+
+  transition: all .25s ease;
 }
 
 .group:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transform: translateY(-6px);
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.12);
 }
 
-h3 {
-  padding: 12px 16px;
-  font-size: 1.15rem;
+/* Title */
+
+.group h3 {
+
+  padding: 14px 16px;
+
+  font-size: 1.1rem;
   font-weight: 600;
+
   text-align: center;
-  background: #1e40af; /* ฟ้าเข้มเดียวกัน */
+
+  background: linear-gradient(135deg,#1e40af,#3b82f6);
+
   color: white;
+
+  letter-spacing: .3px;
 }
+
+/* Grid */
 
 .grid {
-  padding: 16px;
+
+  padding: 18px;
+
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+
+  grid-template-columns: repeat(auto-fill,minmax(120px,1fr));
+
   gap: 12px;
 }
 
+/* Buttons */
+
 button.copy-btn {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-  color: white;
+
+  position: relative;
+
   border: none;
+
+  border-radius: 14px;
+
   padding: 12px 10px;
-  border-radius: 16px; /* โค้งมนมากขึ้น */
-  font-size: 0.95rem;
+
+  font-size: .92rem;
+
   font-weight: 500;
+
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 8px rgba(30,64,175,0.2);
-  text-align: center;
+
+  color: white;
+
+  background: linear-gradient(135deg,#2563eb,#3b82f6);
+
+  box-shadow: 0 4px 12px rgba(37,99,235,.25);
+
+  transition: all .2s ease;
 }
 
 button.copy-btn:hover {
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(30,64,175,0.3);
+
+  background: linear-gradient(135deg,#1d4ed8,#2563eb);
+
+  box-shadow: 0 8px 20px rgba(37,99,235,.35);
 }
+
+button.copy-btn:active {
+  transform: scale(.96);
+}
+
+/* Ripple effect */
+
+button.copy-btn::after {
+
+  content: "";
+
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  top: 0;
+  left: 0;
+
+  opacity: 0;
+
+  background: white;
+
+  transition: opacity .3s;
+}
+
+button.copy-btn:active::after {
+  opacity: .2;
+}
+
+/* Empty */
 
 .empty {
+  grid-column: 1/-1;
   text-align: center;
+
   color: #9ca3af;
-  font-size: 0.9rem;
-  padding: 16px;
-  grid-column: 1 / -1;
+  font-size: .9rem;
+
+  padding: 18px;
 }
 
-.loading, .error {
+/* Loading / Error */
+
+.loading,
+.error {
+
   text-align: center;
+
   padding: 60px 20px;
-  font-size: 1.2rem;
+
+  font-size: 1.1rem;
+
   color: #6b7280;
 }
 
-.error { color: #ef4444; }
+.error {
+  color: #ef4444;
+}
 
-/* Toast - เรียบง่าย สีเขียวอ่อน */
+/* Toast */
+
 div[style*="position: fixed; bottom"] {
-  background: #10b981 !important;
-  border: 1px solid #059669;
-  box-shadow: 0 4px 12px rgba(16,185,129,0.25);
+
+  background: linear-gradient(135deg,#10b981,#34d399) !important;
+
   border-radius: 12px;
-  padding: 12px 24px;
+
+  border: 1px solid #059669;
+
+  box-shadow: 0 8px 22px rgba(16,185,129,.35);
+
   font-weight: 500;
+
+  backdrop-filter: blur(6px);
+}
+
+/* Mobile */
+
+@media (max-width:640px) {
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  #groups-container {
+    gap: 16px;
+  }
+
+  .grid {
+    padding: 14px;
+  }
+
 }
