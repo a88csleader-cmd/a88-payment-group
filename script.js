@@ -266,6 +266,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   checkUpdate();
 
-  setInterval(checkUpdate,30000);
+  setInterval(checkUpdate,15000);
 
 });
