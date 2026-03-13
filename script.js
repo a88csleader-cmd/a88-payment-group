@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbztXhdI49K0pu9PudC23h2RR_jrjHPpdgWwNNevU_M6cz-4Fy7PZQ7HSxuyKjVn3bw30A/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby91DoR9UKw9V2US5jRld3LqRVQZvShK9Cln9snn5DLu4ojOIPmlR55d1Q8zZfXG2QhGg/exec';
 const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';
 
 let lastUpdate = null;
