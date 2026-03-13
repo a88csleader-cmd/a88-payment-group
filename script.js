@@ -1,10 +1,9 @@
 // -------------------------------
-// script.js - Smart Update Version
+// script.js - Smart Update Fixed
 // -------------------------------
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8y3qZx5KJY4bLLaU-oFXtkxWDpC-qcR8l7ch5Q2_6N_U8MmgpGgcATfkZT4C3bNaM1Q/exec';
 const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';
-
 let lastUpdated = null;
 
 const paymentGroups = [
@@ -19,7 +18,7 @@ const paymentGroups = [
 ];
 
 // -------------------------------
-// ฟังก์ชันช่วยจัดรูปเลขบัญชี 10 หลักเป็น 921-2-440197
+// ฟังก์ชันช่วยจัดรูปเลขบัญชี 10 หลัก
 // -------------------------------
 function formatAccountNumber(no) {
   const s = no.toString();
@@ -53,24 +52,23 @@ function loadDataFromGAS() {
     scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
     scriptTag.async = true;
 
-window[callbackName] = function(response) {
-  delete window[callbackName];
-  document.body.removeChild(scriptTag);
+    window[callbackName] = function(response) {
+      delete window[callbackName];
+      document.body.removeChild(scriptTag);
 
-  if (!response || !response.data || !Array.isArray(response.data)) {
-    reject(new Error('ไม่มีข้อมูล'));
-    return;
-  }
+      if (!response || !response.data || !Array.isArray(response.data)) {
+        reject(new Error('ไม่มีข้อมูล'));
+        return;
+      }
 
-  const processed = response.data.map(acc => ({
-    ...acc,
-    short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
-  }));
+      const accounts = response.data.map(acc => ({
+        ...acc,
+        short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
+      }));
 
-  // เก็บ timestamp ล่าสุด
-  lastUpdated = Date.now();
-  resolve(processed);
-};
+      lastUpdated = Date.now();
+      resolve(accounts);
+    };
 
     scriptTag.onerror = () => {
       document.body.removeChild(scriptTag);
@@ -83,7 +81,7 @@ window[callbackName] = function(response) {
 }
 
 // -------------------------------
-// เช็คอัพเดท Smart Update
+// Smart Update: ตรวจสอบทุก 30 วิ
 // -------------------------------
 function checkUpdate() {
   const callbackName = 'gasCallback_' + Date.now();
@@ -95,12 +93,17 @@ function checkUpdate() {
     delete window[callbackName];
     document.body.removeChild(scriptTag);
 
-    if (!response || response.length === 0) return;
+    if (!response || !response.data || !Array.isArray(response.data)) return;
+
+    const accounts = response.data.map(acc => ({
+      ...acc,
+      short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
+    }));
 
     // ถ้า timestamp ใหม่ → โหลดและ render
     const currentTimestamp = Date.now();
-    if (!lastUpdated || currentTimestamp - lastUpdated > 5000) {
-      renderGroups(response);
+    if (!lastUpdated || currentTimestamp - lastUpdated >= 30000) { // 30 วิ
+      renderGroups(accounts);
       lastUpdated = currentTimestamp;
       showToast('🔄 ข้อมูลอัพเดทแล้ว');
     }
@@ -144,9 +147,7 @@ function renderGroups(accounts) {
         const btn = document.createElement('button');
         btn.className = 'copy-btn';
         btn.innerHTML = `
-          <div class="btn-left">
-            <span>${acc.short}</span>
-          </div>
+          <div class="btn-left"><span>${acc.short}</span></div>
           <span class="copy-arrow">📋</span>
         `;
 
@@ -189,7 +190,7 @@ function renderGroups(accounts) {
 }
 
 // -------------------------------
-// โหลดครั้งแรก + Smart Update ทุก 5 วิ
+// โหลดครั้งแรก + Smart Update ทุก 30 วิ
 // -------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('groups-container');
