@@ -12,6 +12,17 @@ const paymentGroups=[
 {name:"AO",key:"AO"}
 ];
 
+function formatAccountNumber(no){
+
+const s=no.toString();
+
+if(s.length===10){
+return `${s.slice(0,3)}-${s.slice(3,4)}-${s.slice(4)}`;
+}
+
+return s;
+}
+
 function showToast(message){
 
 const toast=document.createElement("div");
@@ -25,7 +36,6 @@ document.body.appendChild(toast);
 setTimeout(()=>{
 
 toast.style.opacity=1;
-
 toast.style.transform="translateY(0)";
 
 },50);
@@ -33,12 +43,12 @@ toast.style.transform="translateY(0)";
 setTimeout(()=>{
 
 toast.style.opacity=0;
-
 toast.style.transform="translateY(20px)";
 
 },2200);
 
 setTimeout(()=>toast.remove(),2600);
+
 }
 
 function loadDataFromGAS(){
@@ -146,21 +156,30 @@ ${acc.bank.substring(0,2)}
 
 btn.onclick=()=>{
 
+const accNo=formatAccountNumber(acc.no);
+
 const text=
-`${acc.name} - ${acc.no} (${acc.bank})
-──────────────────────────────
-⚠ หมายเหตุการฝาก-ถอน
-──────────────────────────────
-⚠ ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น
-💸 ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท
-🎰 กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ`;
+`📌 ช่องทางโอนเงิน
+
+ธนาคาร : ${acc.bank}
+ชื่อบัญชี : ${acc.name}
+เลขบัญชี : ${accNo}
+
+━━━━━━━━━━━━━━━━
+
+⚠ สำคัญ
+• กรุณาตรวจสอบชื่อบัญชีก่อนโอน
+• โอนจากบัญชีชื่อเดียวกับที่สมัครเท่านั้น
+• ฝากขั้นต่ำ 50 บาท
+• ถอนขั้นต่ำ 250 บาท
+
+หากโอนแล้ว กรุณาส่งสลิปเพื่อทำรายการค่ะ 🙏`;
 
 navigator.clipboard.writeText(text)
 
 .then(()=>{
 
 btn.style.background="#dcfce7";
-
 btn.style.borderColor="#86efac";
 
 setTimeout(()=>{
@@ -175,6 +194,7 @@ showToast("คัดลอกแล้ว ✓");
 })
 
 .catch(()=>showToast("คัดลอกไม่ได้"));
+
 };
 
 grid.appendChild(btn);
