@@ -13,6 +13,15 @@ const bankColors = {
   default:"#1e40af"
 };
 
+const bankPriority = {
+  SCB: 1,
+  KTB: 2,
+  KBANK: 3,
+  BBL: 4,
+  TMB: 5
+};
+
+
 const paymentGroups = [
   { name:"A884", key:"A884"},
   { name:"A883,WC22", key:"A883,WC22"},
@@ -133,6 +142,23 @@ function checkUpdate(){
 
 }
 
+function sortAccounts(accounts){
+
+  return accounts.sort((a,b)=>{
+
+    const pa = bankPriority[a.bank] || 999;
+    const pb = bankPriority[b.bank] || 999;
+
+    if(pa !== pb) return pa - pb;
+
+    // ถ้า bank เดียวกัน
+    return (a.short || "").localeCompare(b.short || "");
+
+  });
+
+}
+
+
 // --------------------
 function renderGroups(accounts){
 
@@ -142,7 +168,10 @@ function renderGroups(accounts){
 
   paymentGroups.forEach(g=>{
 
-    const matches=accounts.filter(a=>a.groups.includes(g.key));
+    const matches = sortAccounts(
+  accounts.filter(a => a.groups.includes(g.key))
+);
+
 
     const section=document.createElement("div");
     section.className="group";
