@@ -1,5 +1,5 @@
 // -------------------------------
-// script.js - Smart Update + Bank Icons + Telegram-style
+// script.js - Smart Update + Telegram-style Full-width (No Icon)
 // -------------------------------
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8y3qZx5KJY4bLLaU-oFXtkxWDpC-qcR8l7ch5Q2_6N_U8MmgpGgcATfkZT4C3bNaM1Q/exec';
@@ -17,17 +17,6 @@ const paymentGroups = [
   { name: "THVA", key: "THVA" },
   { name: "AO", key: "AO" }
 ];
-
-// -------------------------------
-// Mapping Icon ธนาคาร
-// -------------------------------
-const bankIcons = {
-  "SCB": "https://upload.wikimedia.org/wikipedia/en/thumb/f/fd/Siam_Commercial_Bank_logo.svg/1200px-Siam_Commercial_Bank_logo.svg.png",
-  "KBANK": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/Kasikornbank_logo.svg/1200px-Kasikornbank_logo.svg.png",
-  "BBL": "https://upload.wikimedia.org/wikipedia/en/thumb/e/ed/Bank_of_Bangkok_logo.svg/1200px-Bank_of_Bangkok_logo.svg.png",
-  "KTB": "https://upload.wikimedia.org/wikipedia/en/thumb/2/27/Krung_Thai_Bank_logo.svg/1200px-Krung_Thai_Bank_logo.svg.png",
-  "TMB": "https://upload.wikimedia.org/wikipedia/en/thumb/0/0a/TMB_Bank_logo.svg/1200px-TMB_Bank_logo.svg.png"
-};
 
 // -------------------------------
 // Format เลขบัญชีแบบ 10 หลัก
@@ -127,7 +116,7 @@ function checkUpdate() {
 }
 
 // -------------------------------
-// Render Groups + Buttons
+// Render Groups + Buttons (No Icon)
 // -------------------------------
 function renderGroups(accounts) {
   const container = document.getElementById('groups-container');
@@ -157,7 +146,6 @@ function renderGroups(accounts) {
         btn.className = 'copy-btn';
         btn.innerHTML = `
           <div class="btn-left">
-            <img src="${bankIcons[acc.bank] || ''}" alt="${acc.bank}" class="bank-icon"/>
             <span>${acc.short}</span>
           </div>
           <span class="copy-arrow">📋</span>
