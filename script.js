@@ -53,24 +53,24 @@ function loadDataFromGAS() {
     scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
     scriptTag.async = true;
 
-    window[callbackName] = function(response) {
-      delete window[callbackName];
-      document.body.removeChild(scriptTag);
+window[callbackName] = function(response) {
+  delete window[callbackName];
+  document.body.removeChild(scriptTag);
 
-      if (!response || response.length === 0) {
-        reject(new Error('ไม่มีข้อมูล'));
-        return;
-      }
+  if (!response || !response.data || !Array.isArray(response.data)) {
+    reject(new Error('ไม่มีข้อมูล'));
+    return;
+  }
 
-      const processed = response.map(acc => ({
-        ...acc,
-        short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
-      }));
+  const processed = response.data.map(acc => ({
+    ...acc,
+    short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
+  }));
 
-      // เก็บ timestamp ล่าสุด
-      lastUpdated = Date.now();
-      resolve(processed);
-    };
+  // เก็บ timestamp ล่าสุด
+  lastUpdated = Date.now();
+  resolve(processed);
+};
 
     scriptTag.onerror = () => {
       document.body.removeChild(scriptTag);
