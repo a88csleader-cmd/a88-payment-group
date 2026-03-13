@@ -1,164 +1,158 @@
-const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbx0WHm0EXZDhE0qh9UGlqcmKgrs6FV4qtBFTduG9BlL-sSxRQGHCsfg9jWaOLJDGE_J1g/exec';
-const SECRET_KEY='sAuTaaxokJAPUbbqe7UtKy';
+// -------------------------------
+// script.js - Smart Update Version
+// -------------------------------
 
-const paymentGroups=[
-{name:"A884",key:"A884"},
-{name:"A883,WC22",key:"A883,WC22"},
-{name:"A88,0,1,2,AF,AFF",key:"A88,0,1,2,AF,AFF"},
-{name:"THNA",key:"THNA"},
-{name:"THNB",key:"THNB"},
-{name:"THCA",key:"THCA"},
-{name:"THVA",key:"THVA"},
-{name:"AO",key:"AO"}
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8y3qZx5KJY4bLLaU-oFXtkxWDpC-qcR8l7ch5Q2_6N_U8MmgpGgcATfkZT4C3bNaM1Q/exec';
+const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';
+
+let lastUpdated = null;
+
+const paymentGroups = [
+  { name: "A884", key: "A884" },
+  { name: "A883,WC22", key: "A883,WC22" },
+  { name: "A88,0,1,2,AF,AFF", key: "A88,0,1,2,AF,AFF" },
+  { name: "THNA", key: "THNA" },
+  { name: "THNB", key: "THNB" },
+  { name: "THCA", key: "THCA" },
+  { name: "THVA", key: "THVA" },
+  { name: "AO", key: "AO" }
 ];
 
-function formatAccountNumber(no){
-
-const s=no.toString();
-
-if(s.length===10){
-return `${s.slice(0,3)}-${s.slice(3,4)}-${s.slice(4)}`;
+// -------------------------------
+// ฟังก์ชันช่วยจัดรูปเลขบัญชี 10 หลักเป็น 921-2-440197
+// -------------------------------
+function formatAccountNumber(no) {
+  const s = no.toString();
+  if (s.length === 10) {
+    return `${s.slice(0,3)}-${s.slice(3,4)}-${s.slice(4)}`;
+  }
+  return s;
 }
 
-return s;
+// -------------------------------
+// Toast แจ้งเตือนสวย ๆ
+// -------------------------------
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => { toast.style.opacity = 1; toast.style.transform = 'translateY(0)'; }, 50);
+  setTimeout(() => { toast.style.opacity = 0; toast.style.transform = 'translateY(20px)'; }, 2200);
+  setTimeout(() => toast.remove(), 2600);
 }
 
-function showToast(message){
+// -------------------------------
+// โหลดข้อมูลจาก Google Apps Script
+// -------------------------------
+function loadDataFromGAS() {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'gasCallback_' + Date.now();
+    const scriptTag = document.createElement('script');
+    scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
+    scriptTag.async = true;
 
-const toast=document.createElement("div");
+    window[callbackName] = function(response) {
+      delete window[callbackName];
+      document.body.removeChild(scriptTag);
 
-toast.className="toast";
+      if (!response || response.length === 0) {
+        reject(new Error('ไม่มีข้อมูล'));
+        return;
+      }
 
-toast.textContent=message;
+      const processed = response.map(acc => ({
+        ...acc,
+        short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
+      }));
 
-document.body.appendChild(toast);
+      // เก็บ timestamp ล่าสุด
+      lastUpdated = Date.now();
+      resolve(processed);
+    };
 
-setTimeout(()=>{
+    scriptTag.onerror = () => {
+      document.body.removeChild(scriptTag);
+      delete window[callbackName];
+      reject(new Error('โหลดข้อมูลล้มเหลว'));
+    };
 
-toast.style.opacity=1;
-toast.style.transform="translateY(0)";
-
-},50);
-
-setTimeout(()=>{
-
-toast.style.opacity=0;
-toast.style.transform="translateY(20px)";
-
-},2200);
-
-setTimeout(()=>toast.remove(),2600);
-
+    document.body.appendChild(scriptTag);
+  });
 }
 
-function loadDataFromGAS(){
+// -------------------------------
+// เช็คอัพเดท Smart Update
+// -------------------------------
+function checkUpdate() {
+  const callbackName = 'gasCallback_' + Date.now();
+  const scriptTag = document.createElement('script');
+  scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
+  scriptTag.async = true;
 
-return new Promise((resolve,reject)=>{
+  window[callbackName] = function(response) {
+    delete window[callbackName];
+    document.body.removeChild(scriptTag);
 
-const callback='gasCallback_'+Date.now();
+    if (!response || response.length === 0) return;
 
-const script=document.createElement('script');
+    // ถ้า timestamp ใหม่ → โหลดและ render
+    const currentTimestamp = Date.now();
+    if (!lastUpdated || currentTimestamp - lastUpdated > 5000) {
+      renderGroups(response);
+      lastUpdated = currentTimestamp;
+      showToast('🔄 ข้อมูลอัพเดทแล้ว');
+    }
+  };
 
-script.src=APPS_SCRIPT_URL+'?secret='+encodeURIComponent(SECRET_KEY)+'&callback='+callback;
+  scriptTag.onerror = () => {
+    document.body.removeChild(scriptTag);
+    delete window[callbackName];
+  };
 
-window[callback]=function(response){
-
-delete window[callback];
-
-script.remove();
-
-if(!response||response.length===0){
-
-reject(new Error('ไม่มีข้อมูล'));
-
-return;
+  document.body.appendChild(scriptTag);
 }
 
-const processed=response.map(acc=>({
+// -------------------------------
+// Render กลุ่มบัญชี + ปุ่ม copy
+// -------------------------------
+function renderGroups(accounts) {
+  const container = document.getElementById('groups-container');
+  container.innerHTML = '';
 
-...acc,
+  paymentGroups.forEach(group => {
+    const matches = accounts.filter(acc => acc.groups.includes(group.key));
 
-short:acc.short.trim()||`${acc.bank}-${acc.no.toString().slice(-5)}`
+    const section = document.createElement('div');
+    section.className = 'group';
 
-}));
+    const h3 = document.createElement('h3');
+    h3.textContent = group.name;
+    section.appendChild(h3);
 
-resolve(processed);
-};
+    const grid = document.createElement('div');
+    grid.className = 'grid';
 
-script.onerror=()=>reject(new Error('โหลดข้อมูลล้มเหลว'));
+    if (matches.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = 'ว่าง';
+      grid.appendChild(p);
+    } else {
+      matches.forEach(acc => {
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerHTML = `
+          <div class="btn-left">
+            <span>${acc.short}</span>
+          </div>
+          <span class="copy-arrow">📋</span>
+        `;
 
-document.body.appendChild(script);
-
-});
-}
-
-function renderGroups(accounts){
-
-const container=document.getElementById('groups-container');
-
-container.innerHTML='';
-
-paymentGroups.forEach(group=>{
-
-const matches=accounts.filter(acc=>acc.groups.includes(group.key));
-
-const section=document.createElement('div');
-
-section.className='group';
-
-const h3=document.createElement('h3');
-
-h3.textContent=group.name;
-
-section.appendChild(h3);
-
-const grid=document.createElement('div');
-
-grid.className='grid';
-
-if(matches.length===0){
-
-const p=document.createElement('p');
-
-p.className='empty';
-
-p.textContent='ว่าง';
-
-grid.appendChild(p);
-
-}
-
-matches.forEach(acc=>{
-
-const btn=document.createElement('button');
-
-btn.className='copy-btn';
-
-const bankClass={
-SCB:'bank-scb',
-KTB:'bank-ktb',
-BBL:'bank-bbl',
-KBANK:'bank-kbank',
-BAY:'bank-bay',
-TTB:'bank-ttb',
-GSB:'bank-gsb'
-}[acc.bank]||'bank-scb';
-
-btn.innerHTML=`
-<div class="btn-left">
-<div class="bank-icon ${bankClass}">
-${acc.bank.substring(0,2)}
-</div>
-<span>${acc.short}</span>
-</div>
-<span class="copy-arrow">📋</span>
-`;
-
-btn.onclick=()=>{
-
-const accNo=formatAccountNumber(acc.no);
-
-const text=
+        btn.onclick = () => {
+          const accNo = formatAccountNumber(acc.no);
+          const text =
 `📌 ช่องทางโอนเงิน
 
 ธนาคาร : ${acc.bank}
@@ -175,53 +169,38 @@ const text=
 
 หากโอนแล้ว กรุณาส่งสลิปเพื่อทำรายการค่ะ 🙏`;
 
-navigator.clipboard.writeText(text)
+          navigator.clipboard.writeText(text)
+            .then(() => {
+              btn.style.background = '#dcfce7';
+              btn.style.borderColor = '#86efac';
+              setTimeout(() => { btn.style.background = ''; btn.style.borderColor = ''; }, 600);
+              showToast('คัดลอกแล้ว ✓');
+            })
+            .catch(() => showToast('คัดลอกไม่ได้'));
+        };
 
-.then(()=>{
+        grid.appendChild(btn);
+      });
+    }
 
-btn.style.background="#dcfce7";
-btn.style.borderColor="#86efac";
-
-setTimeout(()=>{
-
-btn.style.background="";
-btn.style.borderColor="";
-
-},600);
-
-showToast("คัดลอกแล้ว ✓");
-
-})
-
-.catch(()=>showToast("คัดลอกไม่ได้"));
-
-};
-
-grid.appendChild(btn);
-
-});
-
-section.appendChild(grid);
-
-container.appendChild(section);
-
-});
+    section.appendChild(grid);
+    container.appendChild(section);
+  });
 }
 
-document.addEventListener("DOMContentLoaded",()=>{
+// -------------------------------
+// โหลดครั้งแรก + Smart Update ทุก 5 วิ
+// -------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('groups-container');
+  container.innerHTML = '<div class="loading">กำลังโหลด...</div>';
 
-const container=document.getElementById('groups-container');
+  loadDataFromGAS()
+    .then(accounts => renderGroups(accounts))
+    .catch(err => {
+      container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
+    });
 
-container.innerHTML='<div class="loading">กำลังโหลด...</div>';
-
-loadDataFromGAS()
-
-.then(accounts=>renderGroups(accounts))
-
-.catch(err=>{
-
-container.innerHTML=`<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
-
-});
-
+  // Smart update check ทุก 5 วินาที
+  setInterval(checkUpdate, 5000);
 });
