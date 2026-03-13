@@ -63,12 +63,25 @@ function renderGroups() {
         btn.textContent = acc.short;
         btn.title = `${acc.name} - ${acc.no}`;
         
-        btn.addEventListener("click", () => {
-          const text = `${acc.name} - ${acc.no}`;
-          navigator.clipboard.writeText(text)
-            .then(() => alert(`คัดลอกแล้ว: ${text}`))
-            .catch(err => alert("คัดลอกไม่สำเร็จ: " + err));
-        });
+btn.addEventListener("click", () => {
+  const accountInfo = `${acc.name} - ${acc.no}`;
+  const warningText = `
+⚠ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น
+💸ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท
+🎰กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ
+  `.trim();
+
+  const fullText = `${accountInfo}\n${warningText}`;
+
+  navigator.clipboard.writeText(fullText)
+    .then(() => {
+      alert(`คัดลอกเรียบร้อยแล้ว!\n\n${fullText}`);
+    })
+    .catch(err => {
+      console.error("Clipboard error:", err);
+      alert("คัดลอกไม่สำเร็จ กรุณาลองใหม่หรือคัดลอกด้วยมือ");
+    });
+});
 
         grid.appendChild(btn);
       });
