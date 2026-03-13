@@ -1,11 +1,12 @@
 // -------------------------------
-// script.js - Smart Update Fixed
+// script.js - Smart Update + Bank Icons + Telegram-style
 // -------------------------------
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8y3qZx5KJY4bLLaU-oFXtkxWDpC-qcR8l7ch5Q2_6N_U8MmgpGgcATfkZT4C3bNaM1Q/exec';
 const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';
 let lastUpdated = null;
 
+// กลุ่มบัญชี
 const paymentGroups = [
   { name: "A884", key: "A884" },
   { name: "A883,WC22", key: "A883,WC22" },
@@ -18,18 +19,27 @@ const paymentGroups = [
 ];
 
 // -------------------------------
-// ฟังก์ชันช่วยจัดรูปเลขบัญชี 10 หลัก
+// Mapping Icon ธนาคาร
+// -------------------------------
+const bankIcons = {
+  "SCB": "https://upload.wikimedia.org/wikipedia/en/thumb/f/fd/Siam_Commercial_Bank_logo.svg/1200px-Siam_Commercial_Bank_logo.svg.png",
+  "KBANK": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/Kasikornbank_logo.svg/1200px-Kasikornbank_logo.svg.png",
+  "BBL": "https://upload.wikimedia.org/wikipedia/en/thumb/e/ed/Bank_of_Bangkok_logo.svg/1200px-Bank_of_Bangkok_logo.svg.png",
+  "KTB": "https://upload.wikimedia.org/wikipedia/en/thumb/2/27/Krung_Thai_Bank_logo.svg/1200px-Krung_Thai_Bank_logo.svg.png",
+  "TMB": "https://upload.wikimedia.org/wikipedia/en/thumb/0/0a/TMB_Bank_logo.svg/1200px-TMB_Bank_logo.svg.png"
+};
+
+// -------------------------------
+// Format เลขบัญชีแบบ 10 หลัก
 // -------------------------------
 function formatAccountNumber(no) {
   const s = no.toString();
-  if (s.length === 10) {
-    return `${s.slice(0,3)}-${s.slice(3,4)}-${s.slice(4)}`;
-  }
+  if (s.length === 10) return `${s.slice(0,3)}-${s.slice(3,4)}-${s.slice(4)}`;
   return s;
 }
 
 // -------------------------------
-// Toast แจ้งเตือนสวย ๆ
+// Toast แจ้งเตือน
 // -------------------------------
 function showToast(message) {
   const toast = document.createElement('div');
@@ -43,7 +53,7 @@ function showToast(message) {
 }
 
 // -------------------------------
-// โหลดข้อมูลจาก Google Apps Script
+// โหลดข้อมูลจาก GAS
 // -------------------------------
 function loadDataFromGAS() {
   return new Promise((resolve, reject) => {
@@ -81,7 +91,7 @@ function loadDataFromGAS() {
 }
 
 // -------------------------------
-// Smart Update: ตรวจสอบทุก 30 วิ
+// Smart Update ทุก 15 วินาที
 // -------------------------------
 function checkUpdate() {
   const callbackName = 'gasCallback_' + Date.now();
@@ -100,9 +110,8 @@ function checkUpdate() {
       short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
     }));
 
-    // ถ้า timestamp ใหม่ → โหลดและ render
     const currentTimestamp = Date.now();
-    if (!lastUpdated || currentTimestamp - lastUpdated >= 30000) { // 30 วิ
+    if (!lastUpdated || currentTimestamp - lastUpdated >= 15000) { // 15 วิ
       renderGroups(accounts);
       lastUpdated = currentTimestamp;
       showToast('🔄 ข้อมูลอัพเดทแล้ว');
@@ -118,7 +127,7 @@ function checkUpdate() {
 }
 
 // -------------------------------
-// Render กลุ่มบัญชี + ปุ่ม copy
+// Render Groups + Buttons
 // -------------------------------
 function renderGroups(accounts) {
   const container = document.getElementById('groups-container');
@@ -147,7 +156,10 @@ function renderGroups(accounts) {
         const btn = document.createElement('button');
         btn.className = 'copy-btn';
         btn.innerHTML = `
-          <div class="btn-left"><span>${acc.short}</span></div>
+          <div class="btn-left">
+            <img src="${bankIcons[acc.bank] || ''}" alt="${acc.bank}" class="bank-icon"/>
+            <span>${acc.short}</span>
+          </div>
           <span class="copy-arrow">📋</span>
         `;
 
@@ -190,7 +202,7 @@ function renderGroups(accounts) {
 }
 
 // -------------------------------
-// โหลดครั้งแรก + Smart Update ทุก 30 วิ
+// DOMContentLoaded
 // -------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('groups-container');
@@ -202,6 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
     });
 
-  // Smart update check ทุก 15 วินาที
+  // Smart Update ทุก 15 วินาที
   setInterval(checkUpdate, 15000);
 });
