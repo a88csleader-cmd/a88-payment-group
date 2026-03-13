@@ -1,41 +1,59 @@
-// ข้อมูลตัวอย่าง (copy จากเอกสาร Excel ของคุณ)
-// ต่อไปสามารถเปลี่ยนเป็น fetch จาก Google Sheet ได้
-const accounts = [
-  { name: "Kanchana Mancharoen", no: "2685324093", bank: "BBL", short: "BBL-324093", groups: ["A884"] },
-  { name: "ratree chaujit", no: "8540983699", bank: "KTB", short: "KTB-983699", groups: ["A883", "WC22"] },
-  { name: "Sa-nah Chehlae", no: "9073326753", bank: "KTB", short: "KTB-326753", groups: ["A88", "0", "1", "2", "AF", "AFF"] },
-  { name: "Sareena Salaeh", no: "9253023007", bank: "KTB", short: "KTB-023007", groups: ["THNA"] },
-  { name: "Nuriyah Jehlor", no: "9073431409", bank: "KTB", short: "KTB-31409", groups: ["THNB"] },
-  { name: "Wannaphat Thammarugsa", no: "9212440197", bank: "SCB", short: "SCB-440197", groups: ["THCA"] },
-  { name: "Sa-Nah Chehlae", no: "6094408567", bank: "SCB", short: "SCB-408567", groups: ["THVA"] },
-  { name: "Ruseeta A Wae", no: "6094349674", bank: "SCB", short: "SCB-349674", groups: ["AO"] },
-  // เพิ่มบัญชีอื่น ๆ ได้ที่นี่
-];
+// script.js - เชื่อม Google Sheets ผ่าน Apps Script (private)
 
-// กำหนด 8 กลุ่ม (ตามที่คุณบอก)
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJj97YN4silaFXe5I0FwuKPSOZGwu41erD_86u5P3PgosuyvTxr2aY9lTr5X-5Ek05-g/exec';  // วาง Web app URL ที่ได้จากขั้นตอน 1 ที่นี่
+const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';  // ต้องตรงกับใน Apps Script เป๊ะ ๆ
+
+// กำหนด 8 กลุ่ม
 const paymentGroups = [
-  { name: "A884",          key: "A884" },
-  { name: "A883, WC22",    keys: ["A883", "WC22"] },
+  { name: "A884",                  key: "A884" },
+  { name: "A883, WC22",            keys: ["A883", "WC22"] },
   { name: "A88, 0, 1, 2, AF, AFF", keys: ["A88", "0", "1", "2", "AF", "AFF"] },
-  { name: "THNA",          key: "THNA" },
-  { name: "THNB",          key: "THNB" },
-  { name: "THCA",          key: "THCA" },
-  { name: "THVA",          key: "THVA" },
-  { name: "AO",            key: "AO"   },
+  { name: "THNA",                  key: "THNA" },
+  { name: "THNB",                  key: "THNB" },
+  { name: "THCA",                  key: "THCA" },
+  { name: "THVA",                  key: "THVA" },
+  { name: "AO",                    key: "AO"   },
 ];
 
-function renderGroups() {
+async function fetchAccounts() {
+  try {
+    const url = `${APPS_SCRIPT_URL}?secret=${encodeURIComponent(SECRET_KEY)}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const accounts = await response.json();
+
+    // ถ้า Apps Script ส่ง error กลับมา
+    if (accounts.error) {
+      throw new Error(accounts.error);
+    }
+
+    // fallback short ถ้าว่าง
+    return accounts.map(acc => ({
+      ...acc,
+      short: acc.short || `${acc.bank}-${acc.no.slice(-5)}`
+    }));
+
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    alert('ไม่สามารถดึงข้อมูลได้ กรุณาตรวจสอบ:\n- Web app URL\n- Secret key\n- Sheet ชื่อ Sheet1 และ header');
+    return [];
+  }
+}
+
+function renderGroups(accounts) {
   const container = document.getElementById("groups-container");
+  if (!container) return;
+
   container.innerHTML = "";
 
   paymentGroups.forEach(group => {
-    // หาบัญชีที่อยู่ในกลุ่มนี้
-    let matchingAccounts = accounts.filter(acc => {
-      if (group.key) {
-        return acc.groups.includes(group.key);
-      } else if (group.keys) {
-        return group.keys.some(k => acc.groups.includes(k));
-      }
+    const matchingAccounts = accounts.filter(acc => {
+      if (group.key) return acc.groups.includes(group.key);
+      if (group.keys) return group.keys.some(k => acc.groups.includes(k));
       return false;
     });
 
@@ -62,7 +80,7 @@ function renderGroups() {
         btn.className = "copy-btn";
         btn.textContent = acc.short;
         btn.title = `${acc.name} - ${acc.no} (${acc.bank})`;
-        
+
         btn.addEventListener("click", () => {
           const accountInfo = `${acc.name} - ${acc.no} (${acc.bank})`;
 
@@ -78,13 +96,8 @@ function renderGroups() {
           const fullText = `${accountInfo}\n${warningText}`;
 
           navigator.clipboard.writeText(fullText)
-            .then(() => {
-              alert(`คัดลอกเรียบร้อยแล้ว!\n\n${fullText}`);
-            })
-            .catch(err => {
-              console.error("Clipboard error:", err);
-              alert("คัดลอกไม่สำเร็จ กรุณาลองใหม่หรือคัดลอกด้วยมือ");
-            });
+            .then(() => alert(`คัดลอกเรียบร้อย!\n\n${fullText}`))
+            .catch(err => alert("คัดลอกไม่สำเร็จ: " + err));
         });
 
         grid.appendChild(btn);
@@ -96,5 +109,11 @@ function renderGroups() {
   });
 }
 
-// รันเมื่อหน้าโหลดเสร็จ
-document.addEventListener("DOMContentLoaded", renderGroups);
+// โหลดข้อมูลเมื่อหน้าเปิด
+document.addEventListener("DOMContentLoaded", async () => {
+  const container = document.getElementById("groups-container");
+  container.innerHTML = '<p style="text-align:center; color:#666;">กำลังโหลดข้อมูลจาก Google Sheets...</p>';
+
+  const accounts = await fetchAccounts();
+  renderGroups(accounts);
+});
