@@ -1,146 +1,207 @@
-// script.js - เวอร์ชัน minimal + toast แทน alert
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbx0WHm0EXZDhE0qh9UGlqcmKgrs6FV4qtBFTduG9BlL-sSxRQGHCsfg9jWaOLJDGE_J1g/exec';
+const SECRET_KEY='sAuTaaxokJAPUbbqe7UtKy';
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0WHm0EXZDhE0qh9UGlqcmKgrs6FV4qtBFTduG9BlL-sSxRQGHCsfg9jWaOLJDGE_J1g/exec';
-const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';
-
-// กลุ่มทั้งหมด (ชื่อตรงกับที่ Sheet ส่งมา)
-const paymentGroups = [
-  { name: "A884",                 key: "A884" },
-  { name: "A883,WC22",            key: "A883,WC22" },
-  { name: "A88,0,1,2,AF,AFF",    key: "A88,0,1,2,AF,AFF" },
-  { name: "THNA",                 key: "THNA" },
-  { name: "THNB",                 key: "THNB" },
-  { name: "THCA",                 key: "THCA" },
-  { name: "THVA",                 key: "THVA" },
-  { name: "AO",                   key: "AO"   }
+const paymentGroups=[
+{name:"A884",key:"A884"},
+{name:"A883,WC22",key:"A883,WC22"},
+{name:"A88,0,1,2,AF,AFF",key:"A88,0,1,2,AF,AFF"},
+{name:"THNA",key:"THNA"},
+{name:"THNB",key:"THNB"},
+{name:"THCA",key:"THCA"},
+{name:"THVA",key:"THVA"},
+{name:"AO",key:"AO"}
 ];
 
-function loadDataFromGAS() {
-  return new Promise((resolve, reject) => {
-    const callbackName = 'gasCallback_' + Date.now();
-    const scriptTag = document.createElement('script');
-    scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
-    scriptTag.async = true;
+function showToast(message){
 
-    window[callbackName] = function(response) {
-      document.body.removeChild(scriptTag);
-      delete window[callbackName];
+const toast=document.createElement("div");
 
-      if (!response || response.length === 0) {
-        reject(new Error('ไม่มีข้อมูล'));
-        return;
-      }
+toast.className="toast";
 
-      const processed = response.map(acc => ({
-        ...acc,
-        short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
-      }));
+toast.textContent=message;
 
-      resolve(processed);
-    };
+document.body.appendChild(toast);
 
-    scriptTag.onerror = () => {
-      document.body.removeChild(scriptTag);
-      delete window[callbackName];
-      reject(new Error('โหลดข้อมูลล้มเหลว'));
-    };
+setTimeout(()=>{
 
-    document.body.appendChild(scriptTag);
-  });
+toast.style.opacity=1;
+
+toast.style.transform="translateY(0)";
+
+},50);
+
+setTimeout(()=>{
+
+toast.style.opacity=0;
+
+toast.style.transform="translateY(20px)";
+
+},2200);
+
+setTimeout(()=>toast.remove(),2600);
 }
 
-// ปรับ showToast ให้สวยและไม่รบกวน
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.textContent = message;
-  toast.style.position = 'fixed';
-  toast.style.bottom = '24px';
-  toast.style.right = '24px';
-  toast.style.background = 'rgba(16, 185, 129, 0.95)'; // เขียว success
-  toast.style.color = 'white';
-  toast.style.padding = '12px 24px';
-  toast.style.borderRadius = '12px';
-  toast.style.zIndex = '2000';
-  toast.style.fontSize = '15px';
-  toast.style.fontWeight = '500';
-  toast.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
-  toast.style.opacity = '0';
-  toast.style.transform = 'translateY(20px)';
-  toast.style.transition = 'all 0.3s ease';
+function loadDataFromGAS(){
 
-  document.body.appendChild(toast);
+return new Promise((resolve,reject)=>{
 
-  setTimeout(() => {
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateY(0)';
-  }, 100);
+const callback='gasCallback_'+Date.now();
 
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(20px)';
-  }, 2200);
+const script=document.createElement('script');
 
-  setTimeout(() => document.body.removeChild(toast), 2800);
+script.src=APPS_SCRIPT_URL+'?secret='+encodeURIComponent(SECRET_KEY)+'&callback='+callback;
+
+window[callback]=function(response){
+
+delete window[callback];
+
+script.remove();
+
+if(!response||response.length===0){
+
+reject(new Error('ไม่มีข้อมูล'));
+
+return;
 }
 
-function renderGroups(accounts) {
-  const container = document.getElementById('groups-container');
-  container.innerHTML = '';
+const processed=response.map(acc=>({
 
-  paymentGroups.forEach(group => {
-    const matches = accounts.filter(acc => acc.groups.includes(group.key));
+...acc,
 
-    const section = document.createElement('div');
-    section.className = 'group';
+short:acc.short.trim()||`${acc.bank}-${acc.no.toString().slice(-5)}`
 
-    const h3 = document.createElement('h3');
-    h3.textContent = group.name;
-    section.appendChild(h3);
+}));
 
-    const grid = document.createElement('div');
-    grid.className = 'grid';
+resolve(processed);
+};
 
-    if (matches.length === 0) {
-      const p = document.createElement('p');
-      p.textContent = 'ว่าง';
-      p.className = 'empty';
-      grid.appendChild(p);
-    } else {
-      matches.forEach(acc => {
-        const btn = document.createElement('button');
-        btn.textContent = acc.short;
-        btn.title = `${acc.name} - ${acc.no} (${acc.bank})`;
+script.onerror=()=>reject(new Error('โหลดข้อมูลล้มเหลว'));
 
-        btn.onclick = () => {
-          const text = `${acc.name} - ${acc.no} (${acc.bank})\n` +
-                       `──────────────────────────────\n` +
-                       `⚠ หมายเหตุการฝาก-ถอน\n` +
-                       `──────────────────────────────\n` +
-                       `⚠ ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น\n` +
-                       `💸 ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท\n` +
-                       `🎰 กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ`;
+document.body.appendChild(script);
 
-          navigator.clipboard.writeText(text)
-            .then(() => showToast('คัดลอกแล้ว ✓'))
-            .catch(() => showToast('คัดลอกไม่ได้'));
-        };
-
-        grid.appendChild(btn);
-      });
-    }
-
-    section.appendChild(grid);
-    container.appendChild(section);
-  });
+});
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('groups-container');
-  container.innerHTML = '<div class="loading">กำลังโหลด...</div>';
+function renderGroups(accounts){
 
-  loadDataFromGAS()
-    .then(accounts => renderGroups(accounts))
-    .catch(err => {
-      container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
-    });
+const container=document.getElementById('groups-container');
+
+container.innerHTML='';
+
+paymentGroups.forEach(group=>{
+
+const matches=accounts.filter(acc=>acc.groups.includes(group.key));
+
+const section=document.createElement('div');
+
+section.className='group';
+
+const h3=document.createElement('h3');
+
+h3.textContent=group.name;
+
+section.appendChild(h3);
+
+const grid=document.createElement('div');
+
+grid.className='grid';
+
+if(matches.length===0){
+
+const p=document.createElement('p');
+
+p.className='empty';
+
+p.textContent='ว่าง';
+
+grid.appendChild(p);
+
+}
+
+matches.forEach(acc=>{
+
+const btn=document.createElement('button');
+
+btn.className='copy-btn';
+
+const bankClass={
+SCB:'bank-scb',
+KTB:'bank-ktb',
+BBL:'bank-bbl',
+KBANK:'bank-kbank',
+BAY:'bank-bay',
+TTB:'bank-ttb',
+GSB:'bank-gsb'
+}[acc.bank]||'bank-scb';
+
+btn.innerHTML=`
+<div class="btn-left">
+<div class="bank-icon ${bankClass}">
+${acc.bank.substring(0,2)}
+</div>
+<span>${acc.short}</span>
+</div>
+<span class="copy-arrow">📋</span>
+`;
+
+btn.onclick=()=>{
+
+const text=
+`${acc.name} - ${acc.no} (${acc.bank})
+──────────────────────────────
+⚠ หมายเหตุการฝาก-ถอน
+──────────────────────────────
+⚠ ไม่อนุญาตให้ทำการฝากเงินจากบัญชีบุคคลอื่น
+💸 ฝากเงินขั้นต่ำ 50 บาท - ถอนขั้นต่ำ 250 บาท
+🎰 กรุณาสอบถามเลขที่บัญชีก่อนการโอนเงินทุกครั้งค่ะ`;
+
+navigator.clipboard.writeText(text)
+
+.then(()=>{
+
+btn.style.background="#dcfce7";
+
+btn.style.borderColor="#86efac";
+
+setTimeout(()=>{
+
+btn.style.background="";
+btn.style.borderColor="";
+
+},600);
+
+showToast("คัดลอกแล้ว ✓");
+
+})
+
+.catch(()=>showToast("คัดลอกไม่ได้"));
+};
+
+grid.appendChild(btn);
+
+});
+
+section.appendChild(grid);
+
+container.appendChild(section);
+
+});
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+const container=document.getElementById('groups-container');
+
+container.innerHTML='<div class="loading">กำลังโหลด...</div>';
+
+loadDataFromGAS()
+
+.then(accounts=>renderGroups(accounts))
+
+.catch(err=>{
+
+container.innerHTML=`<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
+
+});
+
 });
