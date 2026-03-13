@@ -97,6 +97,8 @@ button.copy-btn:hover {
   align-items: center;
   color: white;
   font-weight: 600;
+  font-size: 0.75rem; /* ตัวเล็กลง */
+  text-transform: lowercase; /* ยืนยันเป็นตัวเล็ก */
   flex-shrink: 0;
 }
 
