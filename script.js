@@ -1,10 +1,20 @@
 // -------------------------------
-// script.js - Smart Update + Telegram-style Full-width (No Icon)
+// script.js - Smart Update + Bank initial + Telegram-style + Spinner + Smart Toast
 // -------------------------------
 
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8y3qZx5KJY4bLLaU-oFXtkxWDpC-qcR8l7ch5Q2_6N_U8MmgpGgcATfkZT4C3bNaM1Q/exec';
 const SECRET_KEY = 'sAuTaaxokJAPUbbqe7UtKy';
-let lastUpdated = null;
+let lastAccountsJSON = null;
+
+// ธนาคาร + สี + ตัวอักษรย่อ
+const bankColors = {
+  "SCB": { color: "#1e40af", initial: "S" },
+  "KBANK": { color: "#16a34a", initial: "K" },
+  "BBL": { color: "#f59e0b", initial: "B" },
+  "KTB": { color: "#2563eb", initial: "T" },
+  "TMB": { color: "#7c3aed", initial: "M" },
+  "default": { color: "#1e40af", initial: "?" }
+};
 
 // กลุ่มบัญชี
 const paymentGroups = [
@@ -19,7 +29,7 @@ const paymentGroups = [
 ];
 
 // -------------------------------
-// Format เลขบัญชีแบบ 10 หลัก
+// Format เลขบัญชี
 // -------------------------------
 function formatAccountNumber(no) {
   const s = no.toString();
@@ -28,7 +38,7 @@ function formatAccountNumber(no) {
 }
 
 // -------------------------------
-// Toast แจ้งเตือน
+// Toast
 // -------------------------------
 function showToast(message) {
   const toast = document.createElement('div');
@@ -42,7 +52,7 @@ function showToast(message) {
 }
 
 // -------------------------------
-// โหลดข้อมูลจาก GAS
+// Load Data from GAS
 // -------------------------------
 function loadDataFromGAS() {
   return new Promise((resolve, reject) => {
@@ -65,7 +75,6 @@ function loadDataFromGAS() {
         short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
       }));
 
-      lastUpdated = Date.now();
       resolve(accounts);
     };
 
@@ -80,43 +89,7 @@ function loadDataFromGAS() {
 }
 
 // -------------------------------
-// Smart Update ทุก 15 วินาที
-// -------------------------------
-function checkUpdate() {
-  const callbackName = 'gasCallback_' + Date.now();
-  const scriptTag = document.createElement('script');
-  scriptTag.src = APPS_SCRIPT_URL + '?secret=' + encodeURIComponent(SECRET_KEY) + '&callback=' + callbackName;
-  scriptTag.async = true;
-
-  window[callbackName] = function(response) {
-    delete window[callbackName];
-    document.body.removeChild(scriptTag);
-
-    if (!response || !response.data || !Array.isArray(response.data)) return;
-
-    const accounts = response.data.map(acc => ({
-      ...acc,
-      short: acc.short.trim() || `${acc.bank}-${acc.no.toString().slice(-5)}`
-    }));
-
-    const currentTimestamp = Date.now();
-    if (!lastUpdated || currentTimestamp - lastUpdated >= 15000) { // 15 วิ
-      renderGroups(accounts);
-      lastUpdated = currentTimestamp;
-      showToast('🔄 ข้อมูลอัพเดทแล้ว');
-    }
-  };
-
-  scriptTag.onerror = () => {
-    document.body.removeChild(scriptTag);
-    delete window[callbackName];
-  };
-
-  document.body.appendChild(scriptTag);
-}
-
-// -------------------------------
-// Render Groups + Buttons (No Icon)
+// Render Groups + Buttons
 // -------------------------------
 function renderGroups(accounts) {
   const container = document.getElementById('groups-container');
@@ -144,8 +117,12 @@ function renderGroups(accounts) {
       matches.forEach(acc => {
         const btn = document.createElement('button');
         btn.className = 'copy-btn';
+
+        const bankInfo = bankColors[acc.bank] || bankColors.default;
+
         btn.innerHTML = `
           <div class="btn-left">
+            <span class="bank-circle" style="background:${bankInfo.color}">${bankInfo.initial}</span>
             <span>${acc.short}</span>
           </div>
           <span class="copy-arrow">📋</span>
@@ -190,18 +167,28 @@ function renderGroups(accounts) {
 }
 
 // -------------------------------
+// Smart Update
+// -------------------------------
+function smartUpdate() {
+  loadDataFromGAS().then(accounts => {
+    const newJSON = JSON.stringify(accounts);
+    if (lastAccountsJSON !== newJSON) {
+      renderGroups(accounts);
+      lastAccountsJSON = newJSON;
+      showToast('🔄 ข้อมูลอัพเดทแล้ว');
+    }
+  }).catch(err => {
+    console.error(err);
+  });
+}
+
+// -------------------------------
 // DOMContentLoaded
 // -------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('groups-container');
   container.innerHTML = '<div class="loading">กำลังโหลด...</div>';
 
-  loadDataFromGAS()
-    .then(accounts => renderGroups(accounts))
-    .catch(err => {
-      container.innerHTML = `<div class="error">เกิดข้อผิดพลาด: ${err.message}</div>`;
-    });
-
-  // Smart Update ทุก 15 วินาที
-  setInterval(checkUpdate, 15000);
+  smartUpdate();
+  setInterval(smartUpdate, 15000); // Smart update ทุก 15 วินาที
 });
