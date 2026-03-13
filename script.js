@@ -119,7 +119,7 @@ function renderGroups(accounts) {
         btn.className = 'copy-btn';
 
 const bankColor = bankColors[acc.bank] || bankColors.default;
-const bankInitials = acc.bank.slice(0,2).toLowerCase();
+const bankInitials = acc.bank.slice(0,2).toUpperCase(); // ตัวพิมพ์ใหญ่
 
 btn.innerHTML = `
   <div class="btn-left">
