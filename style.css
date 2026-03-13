@@ -97,9 +97,9 @@ button.copy-btn:hover {
   align-items: center;
   color: white;
   font-weight: 600;
-  font-size: 0.75rem; /* ตัวเล็กลง */
-  text-transform: lowercase; /* ยืนยันเป็นตัวเล็ก */
+  font-size: 0.65rem; /* เล็กพอไม่แย่งซีนชื่อบัญชี */
   flex-shrink: 0;
+  text-align: center;
 }
 
 .copy-arrow {
